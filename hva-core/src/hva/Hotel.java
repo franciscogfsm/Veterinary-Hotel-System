@@ -897,11 +897,9 @@ public class Hotel implements Serializable {
         return animals.toString();
     }
 
-    public String showNonVacinatedAnimals(String animalId) throws CoreUnknownAnimalKeyException {
+    public String showNonVacinatedAnimals(String animalId){
         StringBuilder FormattedString = new StringBuilder();
-        if (!_animals.containsKey(animalId)) {
-            throw new CoreUnknownAnimalKeyException(animalId);
-        }
+        
         for (Animal animal : _animals.values()) {
             if (animal.getHealthState().equals("")) {
                 FormattedString.append(animal.toString()).append("\n");
@@ -910,11 +908,8 @@ public class Hotel implements Serializable {
         return FormattedString.toString();
     }
 
-    public String showHabitatsNonTrees(String habitatID) throws CoreUnknownHabitatKeyException {
+    public String showHabitatsNonTrees(String habitatID) {
         StringBuilder FormattedString = new StringBuilder();
-        if (!_habitats.containsKey(habitatID)) {
-            throw new CoreUnknownHabitatKeyException(habitatID);
-        }
         for (Habitat habitat : _habitats.values()) {
             if (habitat.getNumberOfTrees() == 0) {
                 FormattedString.append(habitat.toString()).append("\n");
