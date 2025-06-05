@@ -132,7 +132,4 @@ public class HotelManager {
         setUnsavedChanges(true);
         return _hotel.Advance_Season();
     }
-    public int getGlobalSatisfaction() throws CoreUnknownEmployeeKeyException,CoreUnknownAnimalKeyException{
-        return _hotel.getGlobalSatisfaction();
-    }
 }

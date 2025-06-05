@@ -48,10 +48,6 @@ public class Animal implements Serializable {
         _habitatId = habitatId;
     }
 
-    public String getHealthState() {
-        return _healthState;
-    }
-
     public void addToHealthState(String healthState) {
         if (_healthState == null || _healthState.isEmpty()) {
             _healthState = healthState;

@@ -57,8 +57,7 @@ public class Hotel implements Serializable {
             tree.CheckForAgeChange();
         }
     }
-
-    public void NextSeasonAllExistingTrees() {
+    public void  NextSeasonAllExistingTrees() {
         for (Tree tree : _trees.values()) {
             tree.NextSeason();
         }
@@ -521,15 +520,15 @@ public class Hotel implements Serializable {
     public void registerVaccine(String vaccineId, String name,
             String[] speciesIds)
             throws CoreDuplicateVaccineKeyException, CoreUnknownSpeciesKeyException {
-
-        Vaccines vaccine = _vaccines.get(vaccineId);
+        String vaccineIdLower = vaccineId.toLowerCase();
+        Vaccines vaccine = _vaccines.get(vaccineIdLower);
         if (vaccine != null) {
             throw new CoreDuplicateVaccineKeyException(vaccineId);
         }
         if (speciesIds.length == 0) {
-            vaccine = new Vaccines(vaccineId, name);
+            vaccine = new Vaccines(vaccineIdLower, name);
         } else {
-            vaccine = new Vaccines(vaccineId, name);
+            vaccine = new Vaccines(vaccineIdLower, name);
             for (int i = 0; i < speciesIds.length; i++) {
                 if (_species.get(speciesIds[i]) == null) {
                     throw new CoreUnknownSpeciesKeyException(speciesIds[i]);
@@ -537,7 +536,7 @@ public class Hotel implements Serializable {
                 vaccine.addSpecies(_species.get(speciesIds[i]));
             }
         }
-        _vaccines.put(vaccineId, vaccine);
+        _vaccines.put(vaccineIdLower, vaccine);
     }
 
     /**
@@ -556,10 +555,6 @@ public class Hotel implements Serializable {
      */
     public Collection<Animal> animals() {
         return _animals.values();
-    }
-
-    public int animalsNumber() {
-        return _animals.size();
     }
 
     /**
@@ -652,8 +647,7 @@ public class Hotel implements Serializable {
         Habitat habitat = _habitats.get(habitatId);
         habitat.addTrees(treeId, tree);
         _trees.put(treeId, tree);
-        return "Árvore|" + treeId + "|" + name + "|" + age + "|" + difficulty + "|" + type + "|"
-                + stateMachine.getStateAction();
+        return "Árvore|" + treeId + "|" + name + "|" + age + "|" + difficulty + "|" + type + "|" + stateMachine.getStateAction();
     }
 
     public void changeHabitatArea(String HabitatId, int area) throws CoreUnknownHabitatKeyException {
@@ -710,39 +704,40 @@ public class Hotel implements Serializable {
             throw new CoreUnknownHabitatKeyException(habitatId);
         }
         Animal animal = _animals.get(animalId);
-        Habitat antigo = _habitats.get(animal.getHabitatId());
-        antigo.removeAnimal(animalId);
         animal.setHabitatId(habitatId);
         Habitat habitat = _habitats.get(habitatId);
         habitat.addAnimal(animalId, animal);
+        habitat.addSpecies(animal.getSpeciesId(), _species.get(animal.getSpeciesId()));
 
     }
 
     public int CalculateSatisfaction(String animalId) throws CoreUnknownAnimalKeyException {
-        double satisfaction = 0;
         if (!_animals.containsKey(animalId)) {
             throw new CoreUnknownAnimalKeyException(animalId);
         }
-
+    
+        // Check if the animal is in a habitat
         Animal animal = _animals.get(animalId);
         if (animal.getHabitatId() == null) {
-            return 20;
+            return 20; // or some default satisfaction
         }
-
+    
         Habitat habitatOfAnimal = _habitats.get(animal.getHabitatId());
         int area = habitatOfAnimal.getHabitatArea();
         int population = habitatOfAnimal.getHabitatPopulation();
-
+    
+        // Ensure to get the correct species from the species map
         Species species = _species.get(animal.getSpeciesId());
-
-        satisfaction = 20
-                + 3 * habitatOfAnimal.iguais(animal)
-                - 2 * habitatOfAnimal.diferentes(animal)
-                + (area / (double) population)
-                + habitatOfAnimal.getAdequation(species);
-
+    
+        double satisfaction = 20 
+            + 3 * habitatOfAnimal.iguais(animal)
+            - 2 * habitatOfAnimal.diferentes(animal)
+            + (area / (double) population) // Avoid integer division
+            + habitatOfAnimal.getAdequation(species);
+        
         return (int) Math.round(satisfaction);
     }
+    
 
     public void AtributeResponsibility(String employeeId, String id)
             throws CoreNoResponsibilityException, CoreUnknownEmployeeKeyException {
@@ -800,10 +795,9 @@ public class Hotel implements Serializable {
         }
 
         int finalDamage = Damage(_vaccines.get(VacineId), VeterinarianId, animal);
-
+        
         if (finalDamage == 0) {
-            if (veterinarian.hasSpecies(animal.getSpeciesId())
-                    && vacine.hasSpecies(_species.get(animal.getSpeciesId()))) {
+            if (veterinarian.hasSpecies(animal.getSpeciesId()) && vacine.hasSpecies(_species.get(animal.getSpeciesId()))) {
                 animal.addToHealthState("NORMAL");
                 VaccinesRegist regist = new VaccinesRegist(VeterinarianId, animalId);
                 _vaccines.get(VacineId).addRegists(regist);
@@ -827,13 +821,13 @@ public class Hotel implements Serializable {
             return false;
         }
         // Add to vacination history
-
+        
         return true;
     }
 
     public int Damage(Vaccines vaccine, String VeterinarianId, Animal animal) {
         int damage = 1000;
-        Species species = _species.get(animal.getSpeciesId());
+        Species species= _species.get(animal.getSpeciesId());
         String specie1 = species.getSpeciesName();
 
         if (vaccine.getSpecies().isEmpty()) {
@@ -868,6 +862,7 @@ public class Hotel implements Serializable {
         return setSpecies1.size();
     }
 
+
     // REGISTO-VACINA|idVacina|idVeterinário|idEspécie
     public String VacinationHistory() {
         StringBuilder history = new StringBuilder();
@@ -884,44 +879,21 @@ public class Hotel implements Serializable {
         }
         return history.toString();
     }
-
-    public String showAnimalsInHabitat(String habitatId) throws CoreUnknownHabitatKeyException {
-        if (!_habitats.containsKey(habitatId)) {
-            throw new CoreUnknownHabitatKeyException(habitatId);
-        }
+    public String showAnimalsInHabitat() {
         StringBuilder animals = new StringBuilder();
-        Habitat habitat = _habitats.get(habitatId);
-        for (Animal animal : habitat.getAnimalsInHabitat()) {
-            animals.append(animal.toString()).append("\n");
+        for (Habitat habitat : _habitats.values()) {
+            // List of animals in the habitat
+            for (Animal animal : habitat.getAnimalsInHabitat()) {
+                animals.append(animal.toString()).append("\n");
+            }
         }
         return animals.toString();
     }
 
-    public String showNonVacinatedAnimals(String animalId){
-        StringBuilder FormattedString = new StringBuilder();
-        
-        for (Animal animal : _animals.values()) {
-            if (animal.getHealthState().equals("")) {
-                FormattedString.append(animal.toString()).append("\n");
-            }
-        }
-        return FormattedString.toString();
-    }
 
-    public String showHabitatsNonTrees(String habitatID) {
-        StringBuilder FormattedString = new StringBuilder();
-        for (Habitat habitat : _habitats.values()) {
-            if (habitat.getNumberOfTrees() == 0) {
-                FormattedString.append(habitat.toString()).append("\n");
-            }
-        }
-        return FormattedString.toString();
-    }
 
-    public String ShowMedicalActsByVeterinarian(String vetId) throws CoreUnknownVeterinarianKeyException {
-        if (!_veterinarians.containsKey(vetId)) {
-            throw new CoreUnknownVeterinarianKeyException(vetId);
-        }
+    
+    public String ShowMedicalActsByVeterinarian(String vetId) {
         StringBuilder acts = new StringBuilder();
         for (Vaccines vaccine : _vaccines.values()) {
             for (VaccinesRegist regist : vaccine.getVaccinesAplicationHistory()) {
@@ -935,13 +907,10 @@ public class Hotel implements Serializable {
         if (acts.length() > 0) {
             acts.setLength(acts.length() - 1);
         }
-        return acts.toString();
+    return acts.toString();
     }
-
-    public String ShowMedicalActsOnAnimal(String animalId) throws CoreUnknownAnimalKeyException {
-        if (!_animals.containsKey(animalId)) {
-            throw new CoreUnknownAnimalKeyException(animalId);
-        }
+    
+    public String ShowMedicalActsOnAnimal(String animalId) {
         StringBuilder acts = new StringBuilder();
         for (Vaccines vaccine : _vaccines.values()) {
             for (VaccinesRegist regist : vaccine.getVaccinesAplicationHistory()) {
@@ -958,49 +927,39 @@ public class Hotel implements Serializable {
         return acts.toString();
     }
 
-    public String showWrongVaccinations() {
-        StringBuilder wrongVaccinations = new StringBuilder();
-        for (Vaccines vaccine : _vaccines.values()) {
-            for (VaccinesRegist regist : vaccine.getVaccinesAplicationHistory()) {
-                if (!_animals.get(regist.getAnimalId()).getHealthState().equals("NORMAL")) {
-                    String formatted = "REGISTO-VACINA|" + vaccine.getVaccineId() + "|" + regist.getEmployeeId() + "|"
-                            + _animals.get(regist.getAnimalId()).getSpeciesId();
-                    wrongVaccinations.append(formatted).append("\n");
-                }
-            }
-        }
-        if (wrongVaccinations.length() > 0) {
-            wrongVaccinations.setLength(wrongVaccinations.length() - 1);
-        }
-        return wrongVaccinations.toString();
-    }
+
+
+
+
 
     public int calculateSatisfactionOfEmployee(String employeeId) throws CoreUnknownEmployeeKeyException {
         Employees employee = _employees.get(employeeId);
-
+        
         if (employee == null) {
             throw new CoreUnknownEmployeeKeyException(employeeId);
         }
-
+        
         if (employee instanceof Veterinarian) {
             Veterinarian vet = (Veterinarian) employee;
             Map<String, Species> _speciesVeterinarians = vet.getVetspecies();
             return calculateVeterinarianSatisfaction(vet, _speciesVeterinarians);
-        } else if (employee instanceof Keeper) {
+        } else  if (employee instanceof Keeper){
             Keeper keeper = (Keeper) employee;
             Map<String, Habitat> _habitatsKeepers = keeper.getKeeperHabitats();
             return calculateKeeperSatisfaction(keeper, _habitatsKeepers);
-        }
+        } 
         return 0;
     }
+
+
 
     private int calculateVeterinarianSatisfaction(Veterinarian vet, Map<String, Species> _speciesVeterinarians) {
         double totalWorkload = 0;
         int numOFVeterinarians = 0;
-        int population = 0;// Populacao
-
+        int population = 0;//Populacao
+        
         for (String speciesId : vet.getSpeciesIds().split(",")) {
-
+            
             Species species = _speciesVeterinarians.get(speciesId);
             if (_speciesVeterinarians.size() > 0) {
                 population += species.getPopulation();
@@ -1008,21 +967,23 @@ public class Hotel implements Serializable {
         }
         int numVeterinarians = getVeterinarianCountForSpecies(vet, _veterinarians);
         numOFVeterinarians += numVeterinarians;
-
-        if (numOFVeterinarians != 0) {
+        
+        if (numOFVeterinarians != 0){
             totalWorkload += (population / (double) numOFVeterinarians);
-
+            
         } else {
             totalWorkload += population;
         }
-
+        
         double satisfaction = 20 - totalWorkload;
-
+    
         vet.setSatisfaction((int) Math.round(satisfaction));
-
+    
         return vet.getSatisfaction();
     }
 
+
+    
     public static int getVeterinarianCountForSpecies(Veterinarian vet, Map<String, Veterinarian> veterinarians) {
         int count = 0;
         Set<String> speciesIds = new HashSet<>(Arrays.asList(vet.getSpeciesIds().split(",")));
@@ -1033,11 +994,10 @@ public class Hotel implements Serializable {
             if (!vet1SpeciesIds.isEmpty()) {
                 count++;
             }
-
+            
         }
         return count;
     }
-
     public static int getKeeperCountForHabitats(Habitat habitat, Map<String, Keeper> keepers) {
         int count = 0;
         Set<String> habitat1 = new HashSet<>(Arrays.asList(habitat.getHabitatId()));
@@ -1046,59 +1006,52 @@ public class Hotel implements Serializable {
             Set<String> keeper1HabitatIds = new HashSet<>(Arrays.asList(keeper1.getHabitatIds().split(",")));
             habitat1.retainAll(keeper1HabitatIds);
             if (!habitat1.isEmpty()) {
-                count++;
-            }
+                count ++;
+            } 
             habitat1 = new HashSet<>(Arrays.asList(habitat.getHabitatId()));
         }
         return count;
     }
 
     private int calculateKeeperSatisfaction(Keeper keeper, Map<String, Habitat> _habitatsOfKeeper) {
-        int area = 0;// Populacao
+        int area = 0;//Populacao
         int population = 0;
-        int clean = 0;
+        int clean= 0;
         double Finalwork = 0;
-        // Work in habitat
+        //Work in habitat 
 
         for (Habitat habitat : keeper.getAssignedHabitats()) {
-            int work = 0;
-            area = habitat.getHabitatArea();
-            population = 3 * habitat.getHabitatPopulation();
+            int work=0;
+            area= habitat.getHabitatArea();
+            population =  3 * habitat.getHabitatPopulation();
             for (Tree tree : habitat.getTrees()) {
                 clean += cleanigEffort(tree);
             }
-            int numKeepers = getKeeperCountForHabitats(habitat, _keepers);
+            int numKeepers = getKeeperCountForHabitats(habitat, _keepers );
             work = area + population + clean;
             Finalwork += work / numKeepers;
         }
-
+    
         double satisfaction = 300 - Finalwork;
-
-        return (int) Math.round(satisfaction);
+        
+        return (int) Math.round(satisfaction);    
     }
 
-    // esforço_limpeza(a) = dificuldade_limpeza(a) * esforço_sazonal(a) *
-    // log(idade(a) + 1)
+
+    //esforço_limpeza(a) = dificuldade_limpeza(a) * esforço_sazonal(a) * log(idade(a) + 1)
     public double cleanigEffort(Tree tree) {
         return tree.getDifficulty() * tree.getCleaningEffort() * Math.log(tree.getTreeAge() + 1);
     }
 
-    public int getGlobalSatisfaction() throws CoreUnknownEmployeeKeyException, CoreUnknownAnimalKeyException {
+    public int getGlobalSatisfaction(){
         int totalSatisfaction = 0;
-
-        if (_employees.isEmpty() && _animals.isEmpty() && _habitats.isEmpty() && _species.isEmpty() && _trees.isEmpty()
-                && _vaccines.isEmpty() && _keepers.isEmpty() && _veterinarians.isEmpty()) {
-            return 0;
-        }
-
+        int numEmployees = 0;
         for (Employees employee : _employees.values()) {
-            totalSatisfaction += calculateSatisfactionOfEmployee(employee.getEmployeeId());
+            //totalSatisfaction += calculateSatisfactionOfEmployee(employee.getEmployeeId());
+            numEmployees++;
         }
-        for (Animal animals : _animals.values()) {
-            totalSatisfaction += CalculateSatisfaction(animals.getAnimalId());
-        }
-
-        return totalSatisfaction;
+        return totalSatisfaction / numEmployees;
     }
-
-} // área(h) + 3 * população(h) + Σ esforço_limpeza(a)
+    
+    
+}   //área(h) + 3 * população(h) + Σ esforço_limpeza(a)

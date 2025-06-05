@@ -37,11 +37,10 @@ public class Habitat implements Serializable {
         if (!_influencedSpecies.containsKey(SpeciesId))
             _influencedSpecies.put(SpeciesId, specie);
     }
-
     public List<Animal> getAnimalsInHabitat() {
         return new ArrayList<>(_animalsInHabitat.values());
     }
-
+    
     public Collection<Tree> getTrees() {
         TreeSet<Tree> sortedTrees = new TreeSet<>(Comparator.comparing(Tree::getTreeId));
         sortedTrees.addAll(_treesInHabitat.values());
@@ -72,10 +71,6 @@ public class Habitat implements Serializable {
         _area = area;
     }
 
-    public int getNumberOfTrees() {
-        return _treesInHabitat.size();
-    }
-
     public void setHabitatInfluence(String SpeciesId, String influence) {
         _speciesInfluence.put(SpeciesId, influence);
     }
@@ -84,19 +79,15 @@ public class Habitat implements Serializable {
         return _animalsInHabitat.size();
     }
 
-    public void removeAnimal(String animalId) {
-        _animalsInHabitat.remove(animalId);
-    }
-
     public int getAdequation(Species specie) {
         String influence = _speciesInfluence.get(specie.getSpeciesId());
-
+        
         // Check for null influence
         if (influence == null) {
             // Handle the case where there is no influence for the species
             return 0; // Or whatever default value makes sense in your context
         }
-
+    
         // Continue with the existing logic if influence is not null
         if (influence.equals("POS")) {
             return 20;
@@ -106,6 +97,7 @@ public class Habitat implements Serializable {
             return 0; // Assuming other cases are treated as neutral
         }
     }
+    
 
     public int iguais(Animal animal) {
         int count = 0;
