@@ -57,25 +57,23 @@ Includes an initial **UML design** outlining class structures and relationships.
 ### 🔧 Compilation
 
 Use `make` to compile the project:
-```bash`
+```bash
 make
-##🛠️ Set the Classpath
+```
+🛠️ Set the Classpath
 Set your CLASSPATH with the correct paths (replace /path_to_the_directory accordingly):
-
-Bash
-
+```
 export CLASSPATH=/path_to_the_directory/po-uilib/po-uilib.jar:/path_to_the_directory/hva-core/hva-core.jar:/path_to_the_directory/hva-app/hva-app.jar
+```
 ▶️ Run the App
-Bash
-
+```Bash
 java hva.app.App
+```
 💉 Requirements
-To run the application, you must install the po-uilib library.
-
-📦 Installation (openSUSE Tumbleweed)
-Bash
-
-zypper ar [https://download.opensuse.org/repositories/home:/d4vid:/po24/openSUSE_Tumbleweed/](https://download.opensuse.org/repositories/home:/d4vid:/po24/openSUSE_Tumbleweed/) PO24
+To run the application, you must install the po-uilib library in the REPO also.
+```
 zypper install po-uilib
+```
 📚 Project Summary
+
 This project showcases fundamental object-oriented design principles applied to a real-world scenario: managing a veterinary hotel. It includes modularization, file I/O, state management, and a menu-based terminal UI.
