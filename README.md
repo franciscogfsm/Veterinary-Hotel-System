@@ -57,9 +57,9 @@ Includes an initial **UML design** outlining class structures and relationships.
 ### 🔧 Compilation
 
 Use `make` to compile the project:
-```bash
+```bash`
 make
-🛠️ Set the Classpath
+##🛠️ Set the Classpath
 Set your CLASSPATH with the correct paths (replace /path_to_the_directory accordingly):
 
 Bash
@@ -77,9 +77,5 @@ Bash
 
 zypper ar [https://download.opensuse.org/repositories/home:/d4vid:/po24/openSUSE_Tumbleweed/](https://download.opensuse.org/repositories/home:/d4vid:/po24/openSUSE_Tumbleweed/) PO24
 zypper install po-uilib
-Alternatively, you can install it manually from:
-
-Repository Mirror 1
-Repository Mirror 2
 📚 Project Summary
 This project showcases fundamental object-oriented design principles applied to a real-world scenario: managing a veterinary hotel. It includes modularization, file I/O, state management, and a menu-based terminal UI.
